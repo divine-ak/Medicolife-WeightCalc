@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medicolife &#8212; Weight Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root[data-theme="dark"]{--bg:#0a0c0f;--bg2:#111318;--bg3:#181c23;--card:#13161d;--border:#252a35;--border-bright:#2e3545;--accent:#00e5a0;--accent2:#00b8ff;--accent3:#ff6b35;--text:#e8eaf0;--text2:#8892a4;--text3:#4a5568;--input-bg:#0e1117;--shadow:0 8px 32px rgba(0,0,0,0.4);}
+:root[data-theme="light"]{--bg:#f0f2f7;--bg2:#e8eaf2;--bg3:#ffffff;--card:#ffffff;--border:#d8dce8;--border-bright:#b8bdd0;--accent:#00a872;--accent2:#0077cc;--accent3:#e05520;--text:#1a1d2e;--text2:#4a5270;--text3:#9099b0;--input-bg:#f5f6fa;--shadow:0 8px 32px rgba(0,0,0,0.1);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background 0.4s,color 0.4s;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:0.22;pointer-events:none;z-index:0;}
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 24px;}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--border);}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.logo small{display:block;font-size:11px;letter-spacing:1px;margin-top:-3px;color:var(--text3);-webkit-text-fill-color:var(--text3);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.theme-toggle{width:48px;height:26px;background:var(--bg3);border:1px solid var(--border-bright);border-radius:13px;cursor:pointer;position:relative;transition:all 0.3s;flex-shrink:0;}
+.theme-toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 2px 8px rgba(0,229,160,0.4);}
+[data-theme="light"] .theme-toggle::after{transform:translateX(22px);}
+.theme-icon{font-size:14px;user-select:none;}
+/* FIX: all buttons get type=button in HTML; base btn styles */
+.btn{display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;border:none;background:none;}
+.btn-save{padding:7px 14px;border-radius:7px;border:1px solid var(--border-bright);color:var(--text2);font-size:12px;background:rgba(255,255,255,0.03);}
+.btn-save:hover{border-color:var(--accent);color:var(--accent);}
+
+/* HERO */
+.hero{padding:44px 0 16px;text-align:center;}
+.hero-tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);padding:5px 14px;border-radius:20px;margin-bottom:16px;animation:fadeDown 0.6s ease both;}
+.hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,7vw,86px);letter-spacing:5px;line-height:0.9;animation:fadeDown 0.6s 0.1s ease both;}
+.hero-line2{display:block;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero p{color:var(--text2);font-size:13px;margin-top:14px;animation:fadeDown 0.6s 0.2s ease both;}
+
+/* FIX: single credit block, clean CSS class, no duplicate */
+.credit-line{text-align:center;padding:10px 0 20px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:1px;animation:fadeDown 0.6s 0.3s ease both;}
+.credit-sig{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-size:14px;letter-spacing:4px;font-family:'Bebas Neue',sans-serif;}
+
+@keyframes fadeDown{from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slideIn{from{opacity:0;transform:translateX(50px);}to{opacity:1;transform:translateX(0);}}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-50px);}to{opacity:1;transform:translateX(0);}}
+@keyframes countUp{from{opacity:0;transform:scale(0.75);}to{opacity:1;transform:scale(1);}}
+@keyframes boom-in{0%{opacity:0;transform:scale(0.7) translateY(30px);}60%{transform:scale(1.03) translateY(-3px);}100%{opacity:1;transform:scale(1) translateY(0);}}
+@keyframes pulse-ring{0%{transform:scale(1);opacity:0.6;}100%{transform:scale(1.5);opacity:0;}}
+
+/* BRAND NAV */
+.brand-nav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;animation:fadeUp 0.5s 0.3s ease both;}
+.brand-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text2);transition:all 0.2s;}
+.brand-pill:hover{border-color:var(--accent2);color:var(--accent2);}
+.brand-pill.active{background:rgba(0,229,160,0.1);border-color:var(--accent);color:var(--accent);box-shadow:0 0 12px rgba(0,229,160,0.15);}
+.brand-pill.done{border-color:rgba(0,184,255,0.35);color:var(--accent2);}
+
+/* PROGRESS */
+.progress-wrap{margin-bottom:22px;animation:fadeUp 0.5s 0.35s ease both;}
+.progress-meta{display:flex;justify-content:space-between;margin-bottom:7px;}
+.progress-meta span{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);}
+.progress-track{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;border:1px solid var(--border);}
+.progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.7s cubic-bezier(0.34,1.1,0.64,1);width:0%;box-shadow:0 0 8px rgba(0,229,160,0.3);}
+
+/* PRODUCTS */
+.products-section{animation:fadeUp 0.5s 0.4s ease both;}
+.brand-header{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.brand-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--text);}
+.brand-count{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1px;}
+.brand-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border-bright),transparent);}
+.products-grid{display:flex;flex-direction:column;gap:9px;margin-bottom:16px;}
+.products-grid.slide-left{animation:slideIn 0.3s cubic-bezier(0.25,0.8,0.25,1) both;}
+.products-grid.slide-right{animation:slideInLeft 0.3s cubic-bezier(0.25,0.8,0.25,1) both;}
+
+.product-card{background:var(--card);border:1px solid var(--border);border-radius:11px;transition:all 0.22s;overflow:hidden;position:relative;}
+.product-card:hover{border-color:var(--border-bright);transform:translateY(-1px);box-shadow:var(--shadow);}
+.product-card.has-value{border-color:rgba(0,229,160,0.3);box-shadow:0 0 14px rgba(0,229,160,0.05);}
+.product-card.has-value::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:3px 0 0 3px;}
+.card-inner{display:grid;grid-template-columns:1fr 85px 85px 130px 120px;align-items:center;}
+.prod-name-wrap{padding:13px 16px;}
+.prod-name{font-size:14px;font-weight:600;color:var(--text);}
+.prod-sub{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+.prod-stat{text-align:center;padding:13px 8px;border-left:1px solid var(--border);}
+.prod-stat-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--text);}
+.prod-stat-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.qty-wrap{padding:10px 12px;border-left:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:4px;}
+.qty-input-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
+.stepper{display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--input-bg);}
+/* FIX: step-btn gets type=button to prevent submit behavior */
+.step-btn{width:30px;height:36px;background:transparent;border:none;color:var(--text2);font-size:14px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;}
+.step-btn:hover{background:rgba(0,229,160,0.1);color:var(--accent);}
+.step-btn:active{transform:scale(0.88);}
+.qty-input{width:48px;height:36px;background:transparent;border:none;border-left:1px solid var(--border);border-right:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:15px;text-align:center;outline:none;-moz-appearance:textfield;appearance:textfield;}
+.qty-input::-webkit-inner-spin-button,.qty-input::-webkit-outer-spin-button{-webkit-appearance:none;appearance:none;}
+.result-wrap{padding:10px 12px;border-left:1px solid var(--border);text-align:center;}
+.result-bottles{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--accent2);}
+.result-weight{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:1px;color:var(--accent);}
+.result-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
+
+/* PAGE NAV */
+.page-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0;margin-bottom:6px;}
+.page-nav-left{display:flex;gap:6px;}
+.page-dot{width:7px;height:7px;border-radius:50%;background:var(--border);transition:all 0.3s;cursor:pointer;}
+.page-dot.active{background:var(--accent);transform:scale(1.4);box-shadow:0 0 7px var(--accent);}
+.page-dot.done{background:var(--accent2);}
+.page-nav-right{display:flex;gap:8px;align-items:center;}
+.page-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);margin-right:4px;}
+.page-label strong{color:var(--accent);}
+/* FIX: nav buttons as proper classes, type=button set in HTML */
+.btn-nav{padding:8px 18px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;cursor:pointer;transition:all 0.2s;border:1px solid var(--border);background:var(--card);color:var(--text2);}
+.btn-nav:hover:not(:disabled){border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.05);}
+.btn-nav:disabled{opacity:0.3;cursor:not-allowed;}
+.btn-nav-next{padding:8px 18px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;cursor:pointer;transition:all 0.2s;background:rgba(0,229,160,0.1);border:1px solid var(--accent);color:var(--accent);}
+.btn-nav-next:hover:not(:disabled){background:rgba(0,229,160,0.18);}
+.btn-nav-next:disabled{opacity:0.3;cursor:not-allowed;}
+
+/* TOTALS */
+.totals-section{margin-top:12px;margin-bottom:26px;}
+.totals-grid{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;}
+.total-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:18px;position:relative;overflow:hidden;}
+.total-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0.45;}
+.total-card.hl{border-color:rgba(0,229,160,0.25);box-shadow:0 0 20px rgba(0,229,160,0.07);}
+.total-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:8px;}
+.total-val{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:2px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.total-unit{font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+.radial-card{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:150px;}
+.radial-wrap{position:relative;width:110px;height:110px;}
+.radial-svg{transform:rotate(-90deg);}
+.radial-bg{fill:none;stroke:var(--border);stroke-width:7;}
+.radial-fill{fill:none;stroke-width:7;stroke:url(#mGrad);stroke-linecap:round;stroke-dasharray:276;stroke-dashoffset:276;transition:stroke-dashoffset 0.8s cubic-bezier(0.34,1.1,0.64,1);}
+.radial-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.radial-pct{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.radial-sub{font-size:9px;color:var(--text3);letter-spacing:1px;}
+
+/* BOOM BUTTON */
+.boom-section{margin-bottom:24px;text-align:center;position:relative;}
+.boom-ring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:310px;height:60px;border-radius:16px;border:1px solid var(--accent);animation:pulse-ring 2s ease infinite;pointer-events:none;}
+.boom-btn{position:relative;display:inline-flex;align-items:center;gap:12px;padding:16px 44px;border-radius:14px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:#050708;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);border:none;transition:all 0.3s;overflow:hidden;z-index:1;}
+.boom-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--accent2) 0%,var(--accent) 100%);opacity:0;transition:opacity 0.3s;}
+.boom-btn:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(0,229,160,0.35);}
+.boom-btn:hover::before{opacity:1;}
+.boom-btn:active{transform:scale(0.97);}
+.boom-btn span,.boom-icon{position:relative;z-index:1;}
+.boom-icon{font-size:20px;}
+
+/* ANALYSIS */
+.analysis-panel{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:26px;display:none;}
+.analysis-panel.visible{display:block;animation:boom-in 0.45s cubic-bezier(0.34,1.1,0.64,1) both;}
+.analysis-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.analysis-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;}
+.analysis-sub{font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace;}
+.analysis-body{padding:18px 22px;}
+.final-header-row{display:grid;grid-template-columns:1fr 65px 75px 95px 80px;margin-bottom:6px;}
+.final-hcell{padding:3px 12px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+.final-hcell.r{text-align:center;}
+.final-list{display:flex;flex-direction:column;gap:6px;}
+.final-row{display:grid;grid-template-columns:1fr 65px 75px 95px 80px;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:9px;overflow:hidden;}
+.fc{padding:11px 12px;font-size:13px;}
+.fc.name{font-weight:600;color:var(--text);}
+.fc.num{text-align:center;border-left:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);}
+.fc.wt{text-align:center;border-left:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--accent);}
+.bar-sec-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:10px;margin-top:18px;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+.bar-name{width:185px;font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;}
+.bar-track{flex:1;height:16px;background:var(--bg);border-radius:3px;overflow:hidden;border:1px solid var(--border);}
+.bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width 0.8s cubic-bezier(0.34,1.1,0.64,1);width:0;}
+.bar-fill.top{background:linear-gradient(90deg,var(--accent3),#ffb347);}
+.bar-val{width:68px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);flex-shrink:0;}
+.bar-val strong{color:var(--accent);}
+.at-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:18px;padding-top:18px;border-top:1px solid var(--border);}
+.at-card{background:rgba(0,229,160,0.05);border:1px solid rgba(0,229,160,0.12);border-radius:10px;padding:12px 16px;}
+.at-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:5px;}
+.at-val{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--accent);}
+.at-unit{font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace;}
+
+/* BOTTOM ACTIONS */
+.bottom-actions{display:flex;gap:10px;margin-bottom:10px;}
+/* FIX: download and clear are type=button, proper classes */
+.btn-download{flex:1;padding:15px;border-radius:11px;background:linear-gradient(135deg,rgba(0,229,160,0.07),rgba(0,184,255,0.07));border:1px solid rgba(0,229,160,0.22);color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:3px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:10px;}
+.btn-download:hover{background:linear-gradient(135deg,rgba(0,229,160,0.14),rgba(0,184,255,0.14));transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,229,160,0.1);}
+.btn-clear{padding:15px 22px;border-radius:11px;border:1px solid var(--border);background:var(--card);color:var(--text3);font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;}
+.btn-clear:hover{border-color:var(--accent3);color:var(--accent3);}
+
+.footer{text-align:center;padding:18px 0 10px;border-top:1px solid var(--border);color:var(--text3);font-size:11px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-top:6px;}
+.toast{position:fixed;bottom:26px;right:26px;z-index:999;background:var(--card);border:1px solid var(--accent);border-radius:9px;padding:11px 16px;font-size:12px;color:var(--accent);font-family:'JetBrains Mono',monospace;box-shadow:0 8px 28px rgba(0,0,0,0.3);transform:translateY(80px);opacity:0;transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+@media(max-width:680px){
+  .card-inner{grid-template-columns:1fr;}
+  .prod-stat,.qty-wrap,.result-wrap{border-left:none;border-top:1px solid var(--border);}
+  .totals-grid{grid-template-columns:1fr 1fr;}
+  .radial-card{display:none;}
+  .final-row,.final-header-row{grid-template-columns:1fr 60px 70px 80px;}
+  .at-grid{grid-template-columns:1fr;}
+  .bottom-actions{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="logo">MEDICOLIFE<small>LOGISTICS WEIGHT SYSTEM</small></div>
+    <div class="topbar-right">
+      <!-- FIX: every button has type="button" explicitly -->
+      <button type="button" class="btn btn-save" onclick="saveData()">&#128190; Save</button>
+      <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
+      <span class="theme-icon" id="themeIcon">&#127769;</span>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-tag">&#9878; SHIPPING WEIGHT CALCULATOR</div>
+    <h1>CALCULATE<span class="hero-line2">YOUR LOAD</span></h1>
+    <p>Brand-by-brand navigation &nbsp;&middot;&nbsp; &#9650;&#9660; steppers to set boxes &nbsp;&middot;&nbsp; Totals live at bottom</p>
+  </div>
+
+
+  <div class="brand-nav" id="brandNav"></div>
+
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="progressLabel">// 0 of 18 products ordered</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <div class="products-section">
+    <div class="brand-header">
+      <div class="brand-title" id="brandTitle">&#8212;</div>
+      <div class="brand-count" id="brandCount"></div>
+      <div class="brand-line"></div>
+    </div>
+    <div class="products-grid" id="productsGrid"></div>
+    <div class="page-nav">
+      <div class="page-nav-left" id="pageDots"></div>
+      <div class="page-nav-right">
+        <span class="page-label"><strong id="pageNum">1</strong> / <strong id="pageTotal">6</strong></span>
+        <!-- FIX: type=button on both nav buttons -->
+        <button type="button" class="btn-nav" id="btnPrev" onclick="changePage(-1)" disabled>&#8592; PREV</button>
+        <button type="button" class="btn-nav-next" id="btnNext" onclick="changePage(1)">NEXT &#8594;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="totals-section">
+    <div class="totals-grid">
+      <div class="total-card hl">
+        <div class="total-lbl">// TOTAL WEIGHT</div>
+        <div class="total-val" id="totalKg">0.00</div>
+        <div class="total-unit">Kilograms</div>
+      </div>
+      <div class="total-card">
+        <div class="total-lbl">// IN TONS</div>
+        <div class="total-val" id="totalTon">0.000</div>
+        <div class="total-unit">Metric Tons</div>
+      </div>
+      <div class="total-card">
+        <div class="total-lbl">// TOTAL BOTTLES</div>
+        <div class="total-val" id="totalBottles">0</div>
+        <div class="total-unit">Pieces</div>
+      </div>
+      <!-- FIX: SVG defs placed at top of SVG, gradient id unique "mGrad" -->
+      <div class="total-card radial-card">
+        <div class="radial-wrap">
+          <svg class="radial-svg" width="110" height="110" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="mGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#00e5a0"/>
+                <stop offset="100%" stop-color="#00b8ff"/>
+              </linearGradient>
+            </defs>
+            <circle class="radial-bg" cx="55" cy="55" r="44"/>
+            <circle class="radial-fill" id="radialCircle" cx="55" cy="55" r="44"/>
+          </svg>
+          <div class="radial-text">
+            <div class="radial-pct" id="radialPct">0%</div>
+            <div class="radial-sub">FILLED</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="boom-section">
+    <div class="boom-ring"></div>
+    <!-- FIX: type=button -->
+    <button type="button" class="boom-btn" onclick="toggleAnalysis()">
+      <span class="boom-icon" id="boomIcon">&#128640;</span>
+      <span id="boomText">GENERATE SHIPMENT REPORT</span>
+    </button>
+  </div>
+
+  <div class="analysis-panel" id="analysisPanel">
+    <div class="analysis-header">
+      <div class="analysis-title">&#128230; FINAL SHIPMENT LIST</div>
+      <div class="analysis-sub" id="analysisSub"></div>
+    </div>
+    <div class="analysis-body">
+      <div id="finalList"></div>
+      <div class="bar-sec-title">// WEIGHT CONTRIBUTION &#8212; TOP PRODUCTS</div>
+      <div id="analysisGrid"></div>
+      <div class="at-grid" id="analysisTotals"></div>
+    </div>
+  </div>
+
+  <div class="bottom-actions">
+    <!-- FIX: type=button on both -->
+    <button type="button" class="btn-download" onclick="downloadReport()">&#11015; DOWNLOAD WEIGHT REPORT</button>
+    <button type="button" class="btn-clear" onclick="clearAll()">&#8635; CLEAR ALL</button>
+  </div>
+
+  <div class="footer">WEIGHTCALC PRO v2.0 &nbsp;&middot;&nbsp; DATA AUTO-SAVED LOCALLY</div>
+
+  <!-- FIX: credit appears once only, at bottom -->
+  <div class="credit-line">
+    Designed &amp; Developed by &nbsp;<span class="credit-sig">&#923;K</span>&nbsp; &middot; All Rights Reserved &copy; 2026
+  </div>
+
+</div><!-- /.wrap -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+var BRANDS = [
+  {name:'MEDIPHENYL', products:[
+    {name:'Mediphenyl 450ml', packing:12, weight:0.45},
+    {name:'Mediphenyl 5L',    packing:4,  weight:5.00}
+  ]},
+  {name:'MEDIPINE', products:[
+    {name:'Medipine 1L', packing:12, weight:1.00},
+    {name:'Medipine 5L', packing:4,  weight:5.00}
+  ]},
+  {name:'MICROFLUSH', products:[
+    {name:'Microflush 250ml', packing:30, weight:0.25},
+    {name:'Microflush 500ml', packing:20, weight:0.50},
+    {name:'Microflush 1L',    packing:20, weight:1.00}
+  ]},
+  {name:'FLOORMAX', products:[
+    {name:'Floormax 250ml', packing:30, weight:0.25},
+    {name:'Floormax 500ml', packing:20, weight:0.50},
+    {name:'Floormax 1L',    packing:20, weight:1.00}
+  ]},
+  {name:'BATHCLEAN', products:[
+    {name:'Bathclean 250ml',  packing:30, weight:0.25},
+    {name:'Bathclean 500ml',  packing:30, weight:0.50},
+    {name:'Bathclean 1000ml', packing:16, weight:1.00}
+  ]},
+  {name:'HOME CHOICE', products:[
+    {name:'Acid Cleaner 1L',        packing:12, weight:1.00},
+    {name:'Acid Cleaner 5L',        packing:4,  weight:5.00},
+    {name:'Toilet Bowl Cleaner 1L', packing:12, weight:1.00},
+    {name:'Glass Cleaner 500ml',    packing:25, weight:0.50},
+    {name:'Bleaching Powder 25kg',  packing:50, weight:0.50}
+  ]}
+];
+
+var PRODUCTS = [];
+BRANDS.forEach(function(b, bi) {
+  b.products.forEach(function(p) {
+    PRODUCTS.push({name:p.name, packing:p.packing, weight:p.weight, bi:bi});
+  });
+});
+var TOTAL = PRODUCTS.length;
+var currentBrand = 0;
+var quantities = new Array(TOTAL).fill(0);
+var analysisOpen = false;
+
+try {
+  var _s = localStorage.getItem('wcp2_qty');
+  if (_s) { var _a = JSON.parse(_s); if (_a.length === TOTAL) quantities = _a; }
+} catch(e) {}
+
+function getFlat(bi, li) {
+  var o = 0;
+  for (var i = 0; i < bi; i++) o += BRANDS[i].products.length;
+  return o + li;
+}
+
+function init() { renderNav(); renderBrand(0, null); updateTotals(); }
+
+function renderNav() {
+  var nav = document.getElementById('brandNav');
+  nav.innerHTML = '';
+  BRANDS.forEach(function(b, i) {
+    var done = b.products.some(function(_, pi) { return quantities[getFlat(i, pi)] > 0; });
+    var btn = document.createElement('button');
+    btn.type = 'button'; // FIX: type set programmatically too
+    btn.className = 'brand-pill' + (i === currentBrand ? ' active' : done ? ' done' : '');
+    btn.textContent = b.name;
+    btn.onclick = (function(idx) { return function() { goTo(idx, null); }; })(i);
+    nav.appendChild(btn);
+  });
+}
+
+function goTo(idx, dir) { currentBrand = idx; renderBrand(idx, dir); renderNav(); }
+
+function renderBrand(idx, dir) {
+  var brand = BRANDS[idx];
+  document.getElementById('brandTitle').textContent = brand.name;
+  document.getElementById('brandCount').textContent = brand.products.length + ' PRODUCTS';
+  document.getElementById('pageNum').textContent = idx + 1;
+  document.getElementById('pageTotal').textContent = BRANDS.length;
+  document.getElementById('btnPrev').disabled = (idx === 0);
+  var nb = document.getElementById('btnNext');
+  nb.disabled = (idx === BRANDS.length - 1);
+  nb.textContent = (idx === BRANDS.length - 1) ? 'DONE \u2713' : 'NEXT \u2192';
+
+  var dw = document.getElementById('pageDots');
+  dw.innerHTML = '';
+  BRANDS.forEach(function(_, i) {
+    var done = BRANDS[i].products.some(function(_, pi) { return quantities[getFlat(i, pi)] > 0; });
+    var d = document.createElement('div');
+    d.className = 'page-dot' + (i === idx ? ' active' : done ? ' done' : '');
+    d.onclick = (function(ii) { return function() { goTo(ii, null); }; })(i);
+    dw.appendChild(d);
+  });
+
+  var grid = document.getElementById('productsGrid');
+  if (dir) {
+    grid.classList.remove('slide-left', 'slide-right');
+    void grid.offsetWidth;
+    grid.classList.add(dir === 1 ? 'slide-left' : 'slide-right');
+  }
+  grid.innerHTML = '';
+
+  brand.products.forEach(function(p, li) {
+    var fi = getFlat(idx, li);
+    var qty = quantities[fi] || 0;
+    var btl = qty * p.packing;
+    var bw = (btl * p.weight).toFixed(2);
+    var card = document.createElement('div');
+    card.className = 'product-card' + (qty > 0 ? ' has-value' : '');
+    // FIX: step buttons get type="button" inside innerHTML
+    card.innerHTML =
+      '<div class="card-inner">' +
+        '<div class="prod-name-wrap"><div class="prod-name">' + p.name + '</div>' +
+        '<div class="prod-sub">PACKING: ' + p.packing + ' PCS/BOX &nbsp;&middot;&nbsp; WT/PC: ' + p.weight + ' KG</div></div>' +
+        '<div class="prod-stat"><div class="prod-stat-val">' + p.packing + '</div><div class="prod-stat-lbl">Pack</div></div>' +
+        '<div class="prod-stat"><div class="prod-stat-val">' + p.weight + '</div><div class="prod-stat-lbl">Kg/Pc</div></div>' +
+        '<div class="qty-wrap"><div class="qty-input-label">Boxes Ordered</div>' +
+        '<div class="stepper">' +
+          '<button type="button" class="step-btn" onclick="stepQty(' + fi + ',-1)">&#9660;</button>' +
+          '<input class="qty-input" type="number" min="0" value="' + (qty || '') + '" placeholder="0" data-idx="' + fi + '" onchange="onQtyChange(this)" oninput="onQtyChange(this)">' +
+          '<button type="button" class="step-btn" onclick="stepQty(' + fi + ',1)">&#9650;</button>' +
+        '</div></div>' +
+        '<div class="result-wrap">' +
+          '<div class="result-bottles" id="btl-' + fi + '">' + (btl > 0 ? btl : '\u2014') + '</div>' +
+          '<div class="result-lbl">Bottles</div>' +
+          '<div class="result-weight" id="wt-' + fi + '">' + (qty > 0 ? bw : '\u2014') + '</div>' +
+          '<div class="result-lbl">KG</div>' +
+        '</div>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+  updateProgress();
+}
+
+function stepQty(fi, delta) {
+  quantities[fi] = Math.max(0, (quantities[fi] || 0) + delta);
+  var inp = document.querySelector('.qty-input[data-idx="' + fi + '"]');
+  if (inp) { inp.value = quantities[fi] || ''; refreshCard(fi); }
+  updateTotals();
+  if (analysisOpen) renderAnalysis();
+}
+
+function onQtyChange(input) {
+  var fi = parseInt(input.dataset.idx, 10);
+  var v = parseInt(input.value, 10);
+  if (isNaN(v) || v < 0) { v = 0; input.value = ''; }
+  quantities[fi] = v;
+  refreshCard(fi);
+  updateTotals();
+  if (analysisOpen) renderAnalysis();
+}
+
+function refreshCard(fi) {
+  var p = PRODUCTS[fi];
+  var qty = quantities[fi] || 0;
+  var btl = qty * p.packing;
+  var bw = btl * p.weight;
+  var bEl = document.getElementById('btl-' + fi);
+  var wEl = document.getElementById('wt-' + fi);
+  if (bEl) {
+    bEl.textContent = btl > 0 ? btl : '\u2014';
+    wEl.textContent = bw > 0 ? bw.toFixed(2) : '\u2014';
+    bEl.style.animation = 'none'; void bEl.offsetWidth; bEl.style.animation = 'countUp 0.25s ease';
+    wEl.style.animation = 'none'; void wEl.offsetWidth; wEl.style.animation = 'countUp 0.25s ease';
+  }
+  var inp = document.querySelector('.qty-input[data-idx="' + fi + '"]');
+  if (inp) inp.closest('.product-card').classList.toggle('has-value', qty > 0);
+  renderNav();
+  var dots = document.querySelectorAll('.page-dot');
+  BRANDS.forEach(function(b, i) {
+    if (!dots[i]) return;
+    var done = b.products.some(function(_, pi) { return quantities[getFlat(i, pi)] > 0; });
+    dots[i].className = 'page-dot' + (i === currentBrand ? ' active' : done ? ' done' : '');
+  });
+}
+
+function updateProgress() {
+  var filled = quantities.filter(function(q) { return q > 0; }).length;
+  var pct = Math.round((filled / TOTAL) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressLabel').textContent = '// ' + filled + ' of ' + TOTAL + ' products ordered';
+}
+
+function updateTotals() {
+  var kg = 0, btl = 0;
+  PRODUCTS.forEach(function(p, i) {
+    var q = quantities[i] || 0;
+    var b = q * p.packing;
+    btl += b;
+    kg += b * p.weight;
+  });
+  animNum('totalKg', kg.toFixed(2));
+  animNum('totalTon', (kg / 1000).toFixed(3));
+  animNum('totalBottles', btl);
+  var filled = quantities.filter(function(q) { return q > 0; }).length;
+  var pct = (filled / TOTAL) * 100;
+  document.getElementById('radialCircle').style.strokeDashoffset = (276 - (pct / 100) * 276).toFixed(2);
+  document.getElementById('radialPct').textContent = Math.round(pct) + '%';
+  updateProgress();
+}
+
+function animNum(id, val) {
+  var el = document.getElementById(id);
+  if (el && el.textContent !== String(val)) {
+    el.textContent = val;
+    el.style.animation = 'none'; void el.offsetWidth; el.style.animation = 'countUp 0.3s ease';
+  }
+}
+
+function changePage(dir) {
+  var n = currentBrand + dir;
+  if (n < 0 || n >= BRANDS.length) return;
+  goTo(n, dir);
+}
+
+function toggleAnalysis() {
+  analysisOpen = !analysisOpen;
+  var panel = document.getElementById('analysisPanel');
+  document.getElementById('boomText').textContent = analysisOpen ? 'HIDE REPORT' : 'GENERATE SHIPMENT REPORT';
+  document.getElementById('boomIcon').textContent = analysisOpen ? '\u2715' : '\uD83D\uDE80';
+  if (analysisOpen) {
+    panel.classList.add('visible');
+    renderAnalysis();
+    setTimeout(function() { panel.scrollIntoView({behavior:'smooth', block:'start'}); }, 120);
+  } else {
+    panel.classList.remove('visible');
+  }
+}
+
+function renderAnalysis() {
+  var ordered = PRODUCTS.map(function(p, i) {
+    var q = quantities[i] || 0;
+    return {name:p.name, qty:q, bottles:q*p.packing, totalWeight:q*p.packing*p.weight};
+  }).filter(function(d) { return d.qty > 0; });
+
+  var fL = document.getElementById('finalList');
+  var aG = document.getElementById('analysisGrid');
+  var aT = document.getElementById('analysisTotals');
+
+  if (ordered.length === 0) {
+    fL.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:24px;text-align:center;font-family:JetBrains Mono,monospace;">No products ordered yet.</div>';
+    aG.innerHTML = '';
+    aT.innerHTML = '';
+    document.getElementById('analysisSub').textContent = '0 products';
+    return;
+  }
+
+  var totalKg = ordered.reduce(function(s, d) { return s + d.totalWeight; }, 0);
+  var totalBtl = ordered.reduce(function(s, d) { return s + d.bottles; }, 0);
+  document.getElementById('analysisSub').textContent = ordered.length + ' products \u00B7 ' + totalBtl + ' bottles';
+
+  var sorted = ordered.slice().sort(function(a, b) { return b.totalWeight - a.totalWeight; });
+  var medals = ['\uD83E\uDD47 ', '\uD83E\uDD48 ', '\uD83E\uDD49 '];
+
+  fL.innerHTML =
+    '<div class="final-header-row">' +
+      '<div class="final-hcell">Product</div>' +
+      '<div class="final-hcell r">Boxes</div>' +
+      '<div class="final-hcell r">Bottles</div>' +
+      '<div class="final-hcell r">Weight</div>' +
+      '<div class="final-hcell r">% Share</div>' +
+    '</div>' +
+    '<div class="final-list">' +
+    sorted.map(function(d, i) {
+      var sh = totalKg > 0 ? ((d.totalWeight / totalKg) * 100).toFixed(1) : '0.0';
+      var m = i < 3 ? medals[i] : '';
+      return '<div class="final-row">' +
+        '<div class="fc name">' + m + d.name + '</div>' +
+        '<div class="fc num">' + d.qty + '</div>' +
+        '<div class="fc num">' + d.bottles + '</div>' +
+        '<div class="fc wt">' + d.totalWeight.toFixed(2) + ' kg</div>' +
+        '<div class="fc num">' + sh + '%</div>' +
+      '</div>';
+    }).join('') +
+    '</div>';
+
+  var maxW = sorted[0].totalWeight;
+  aG.innerHTML = sorted.map(function(d, i) {
+    var w = ((d.totalWeight / maxW) * 100).toFixed(1);
+    return '<div class="bar-row">' +
+      '<div class="bar-name">' + (i === 0 ? '\uD83C\uDFC6 ' : '') + d.name + '</div>' +
+      '<div class="bar-track"><div class="bar-fill' + (i === 0 ? ' top' : '') + '" style="width:' + w + '%"></div></div>' +
+      '<div class="bar-val"><strong>' + d.totalWeight.toFixed(2) + '</strong> kg</div>' +
+    '</div>';
+  }).join('');
+
+  aT.innerHTML =
+    '<div class="at-card"><div class="at-lbl">// TOTAL WEIGHT</div><div class="at-val">' + totalKg.toFixed(2) + '</div><div class="at-unit">Kilograms</div></div>' +
+    '<div class="at-card"><div class="at-lbl">// IN TONS</div><div class="at-val">' + (totalKg / 1000).toFixed(3) + '</div><div class="at-unit">Metric Tons</div></div>' +
+    '<div class="at-card"><div class="at-lbl">// TOTAL BOTTLES</div><div class="at-val">' + totalBtl + '</div><div class="at-unit">Across ' + ordered.length + ' products</div></div>';
+}
+
+function saveData() {
+  try { localStorage.setItem('wcp2_qty', JSON.stringify(quantities)); } catch(e) {}
+  showToast('\u2713 Saved');
+}
+
+function clearAll() {
+  if (!confirm('Clear all entries?')) return;
+  quantities = new Array(TOTAL).fill(0);
+  try { localStorage.removeItem('wcp2_qty'); } catch(e) {}
+  renderBrand(currentBrand, null);
+  renderNav();
+  updateTotals();
+  if (analysisOpen) renderAnalysis();
+  showToast('\u21BA All cleared');
+}
+
+function toggleTheme() {
+  var r = document.documentElement;
+  var dark = r.getAttribute('data-theme') === 'dark';
+  r.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('themeIcon').textContent = dark ? '\u2600\uFE0F' : '\uD83C\uDF19';
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2400);
+}
+
+function downloadReport() {
+  var ordered = PRODUCTS.map(function(p, i) {
+    var q = quantities[i] || 0;
+    return {name:p.name, packing:p.packing, weight:p.weight, qty:q, bottles:q*p.packing, totalWeight:q*p.packing*p.weight};
+  }).filter(function(d) { return d.qty > 0; });
+
+  if (ordered.length === 0) { showToast('\u26A0 No products ordered yet'); return; }
+
+  var totalKg = ordered.reduce(function(s, d) { return s + d.totalWeight; }, 0);
+  var totalBtl = ordered.reduce(function(s, d) { return s + d.bottles; }, 0);
+  var rows = ordered.map(function(d) {
+    return '<tr><td>' + d.name + '</td><td>' + d.packing + '</td><td>' + d.weight + '</td><td>' + d.qty + '</td><td>' + d.bottles + '</td><td style="font-weight:700;color:#00a872">' + d.totalWeight.toFixed(2) + ' kg</td></tr>';
+  }).join('');
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Medicolife Report</title>' +
+    '<style>body{font-family:sans-serif;padding:40px;color:#1a1d2e;max-width:900px;margin:0 auto}' +
+    'h1{font-size:28px;letter-spacing:4px;margin-bottom:4px}' +
+    'p.sub{color:#888;font-size:12px;margin-bottom:24px}' +
+    'table{width:100%;border-collapse:collapse;font-size:13px}' +
+    'th{background:#0a0c0f;color:#fff;padding:9px 12px;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase}' +
+    'td{padding:9px 12px;border-bottom:1px solid #eee;text-align:center}' +
+    'td:first-child{text-align:left}' +
+    'tr.tot td{background:#f0faf5;font-weight:700}' +
+    'p.foot{margin-top:24px;font-size:11px;color:#bbb;border-top:1px solid #eee;padding-top:12px}' +
+    '</style></head><body>' +
+    '<h1>MEDICOLIFE</h1>' +
+    '<p class="sub">Shipment Weight Report &mdash; ' + new Date().toLocaleString() + '</p>' +
+    '<table><thead><tr><th>Product</th><th>Packing</th><th>Wt/Pc&nbsp;kg</th><th>Boxes</th><th>Bottles</th><th>Weight</th></tr></thead>' +
+    '<tbody>' + rows +
+    '<tr class="tot"><td colspan="4">GRAND TOTAL</td><td>' + totalBtl + ' pcs</td><td>' + totalKg.toFixed(2) + ' kg / ' + (totalKg / 1000).toFixed(3) + ' ton</td></tr>' +
+    '</tbody></table>' +
+    '<p class="foot">WeightCalc Pro v2.0 &middot; Designed &amp; Developed by \u039BK</p>' +
+    '</body></html>';
+  var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'medicolife-report-' + new Date().toISOString().slice(0, 10) + '.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  showToast('\u2B07 Downloaded!');
+}
+
+setInterval(saveData, 30000);
+init();
+</script>
+</body>
+</html>
